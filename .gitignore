@@ -56,6 +56,61 @@ Carthage/Build/
 # For more information about the recommended setup visit:
 # https://docs.fastlane.tools/best-practices/source-control/#source-control
 
+# Xcode
+DerivedData/
+*.xcworkspace
+*.xcuserstate
+*.xcuserdata/
+*.xcscmblueprint
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Cocoapods (if used)
+Pods/
+Podfile.lock
+
+# Carthage (if used)
+Carthage/
+Carthage/Build/
+
+# Firebase
+GoogleService-Info.plist
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+# General macOS
+.DS_Store
+*.swp
+
+# User settings
+*.env
+*.orig
+*.user
+*.log
+*.tmp
+
+# Optional: Ignore crash reports and analytics
+*.crash
+*.xccrashlog
+
+# Optional: App-specific temp files
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Firebase Analytics / Crashlytics (if manually exported)
+firebase-debug.log
 fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
