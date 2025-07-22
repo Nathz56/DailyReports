@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct FirestoreView: View {
+    
     @StateObject private var firestoreManager = FirestoreManager()
     @State private var showingAddReport = false
     
@@ -16,43 +17,14 @@ struct FirestoreView: View {
             NavigationView {
                 List {
                     ForEach(firestoreManager.reports) { report in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Description: \(report.description)")
-                                    .font(.headline)
-                                
-                                Text("Category: \(report.categoryID)")
-                                    .font(.subheadline)
-                                
-                                Text("Location: \(report.locationID)")
-                                    .font(.subheadline)
-                                
-//                                if let photo = report.photo {
-//                                    Text("Photo URL: \(photo)")
-//                                        .font(.footnote)
-//                                        .foregroundColor(.blue)
-//                                }
-                                
-                                Text("Time: \(report.reportTime.formatted(date: .abbreviated, time: .shortened))")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
-                                
-                                Text("Volunteer: \(report.volunteerID)")
-                                    .font(.caption2)
-                                    .foregroundColor(.gray)
+                        ReportRowView(report: report, firestoreManager: firestoreManager)
+                            .swipeActions {
+                                Button("Edit") {
+                                    // implement your editing logic
+                                    showingAddReport = true
+                                }
+                                .tint(.blue)
                             }
-                            Spacer()
-                            Button("Delete") {
-                                firestoreManager.deleteReport(report: report)
-                            }
-                        }
-                        .swipeActions {
-                            Button("Edit") {
-                                // implement your editing logic
-                                showingAddReport = true
-                            }
-                            .tint(.blue)
-                        }
                     }
                 }
                 .navigationTitle("Reports")
@@ -66,6 +38,55 @@ struct FirestoreView: View {
                 }
                 .sheet(isPresented: $showingAddReport) {
                     AddReportView(firestoreManager: firestoreManager)
+                }
+            }
+        }
+    }
+}
+
+struct ReportRowView: View {
+    let report: Report
+    let firestoreManager: FirestoreManager
+    
+    @State private var categoryName: String = "Loading..."
+    @State private var volunteerName: String = "Loading..."
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Description: \(report.description)")
+                    .font(.headline)
+                
+                Text("Category: \(categoryName)")
+                    .font(.subheadline)
+                
+                Text("Location: \(report.locationID)")
+                    .font(.subheadline)
+                
+                Text("Time: \(report.reportTime.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Text("Volunteer: \(volunteerName)")
+                    .font(.caption2)
+                    .foregroundColor(.gray)
+            }
+            Spacer()
+            Button("Delete") {
+                firestoreManager.deleteReport(report: report)
+            }
+        }
+        .onAppear {
+            // Load category name when the row appears
+            firestoreManager.getCategoryName(fromCategoryID: report.categoryID) { name in
+                DispatchQueue.main.async {
+                    self.categoryName = name
+                }
+            }
+            
+            firestoreManager.getVolunteerName(fromVolunteerID: report.volunteerID) { name in
+                DispatchQueue.main.async {
+                    self.volunteerName = name
                 }
             }
         }
@@ -111,4 +132,3 @@ struct AddReportView: View {
         }
     }
 }
-
