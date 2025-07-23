@@ -13,6 +13,7 @@ struct ReportCardView: View {
     
     @State private var categoryName: String = "Loading..."
     @State private var volunteerName: String = "Loading..."
+    @State private var locationDetails: String = "Loading..."
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -30,7 +31,7 @@ struct ReportCardView: View {
                         Text("Category: \(categoryName)")
                             .font(.subheadline)
 
-                        Text("Location: \(report.locationID)")
+                        Text("Location: \(locationDetails)")
                             .font(.subheadline)
                         
                         
@@ -59,11 +60,20 @@ struct ReportCardView: View {
                 }
             }
             
-            firestoreManager.getVolunteerName(fromVolunteerID: report.volunteerID) { name in
+            firestoreManager.getCurrentVolunteerName(fromVolunteerID: report.volunteerID) { name in
                 DispatchQueue.main.async {
                     self.volunteerName = name
                 }
             }
+            
+            firestoreManager.getLocationName(fromLocationID: report.locationID) { name in
+                DispatchQueue.main.async {
+                    self.locationDetails = name
+                }
+            }
+            firestoreManager.getCurrentUser()
+            firestoreManager.showAllCategory()
+            firestoreManager.showAllLocation()
         }
     }
 }
