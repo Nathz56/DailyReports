@@ -6,61 +6,183 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import UIKit
 
 struct FirestoreView: View {
     
     @StateObject private var firestoreManager = FirestoreManager()
     @State private var showingAddReport = false
+    @EnvironmentObject var authManager: AuthManager
+    var body: some View {
+        VStack {
+            NavigationView {
+                List {
+                    ForEach(firestoreManager.reports) { report in
+                        ReportRowView(report: report, firestoreManager: firestoreManager)
+                            .swipeActions {
+                                Button("Edit") {
+                                    // implement your editing logic
+                                    showingAddReport = true
+                                }
+                                .tint(.blue)
+                            }
+                    }
+                }
+                .navigationTitle("Reports")
+                .navigationBarItems(trailing: Button(action: {
+                    showingAddReport = true
+                }) {
+                    Image(systemName: "plus")
+                })
+                .onAppear {
+                    firestoreManager.getReport()
+                }
+                .sheet(isPresented: $showingAddReport) {
+                    AddReportView(firestoreManager: firestoreManager)
+                }
+                .navigationBarItems(leading:  Button("Sign Out") {
+                    try? Auth.auth().signOut()
+                })
+            }
+        }
+    }
+}
+
+struct ReportRowView: View {
+    let report: Report
+    let firestoreManager: FirestoreManager
+    
+    @State private var categoryName: String = "Loading..."
+    @State private var volunteerName: String = "Loading..."
+    @State private var locationDetails: String = "Loading..."
+    
     
     var body: some View {
-        ZStack{
-            VStack {
-                NavigationView {
-                    ScrollView {
-                        LazyVStack{
-                            ForEach(firestoreManager.reports) { report in
-                                ReportCardView(report: report, firestoreManager: firestoreManager)
-                                    .swipeActions {
-                                        Button("Edit") {
-                                            // implement your editing logic
-                                            showingAddReport = true
-                                        }
-                                        .tint(.blue)
-                                    }
-                            }
-                            .frame( width: 357, height: 173)
-                            .cornerRadius(10)
-                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 4)
-                        }
-                        .padding()
-                    }
-                    .navigationTitle("Report List")
-                    .onAppear {
-                        firestoreManager.getReport()
-                    }
-                    .sheet(isPresented: $showingAddReport) {
-                        AddReportView(firestoreManager: firestoreManager)
-                    }
+        HStack {
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Description: \(report.description)")
+                    .font(.subheadline)
+                
+                Text("Category: \(categoryName)")
+                    .font(.subheadline)
+                
+                Text("Location: \(locationDetails)")
+                    .font(.subheadline)
+                
+                Text("Volunteer: \(volunteerName)")
+                    .font(.subheadline)
+//                    .foregroundColor(.gray)
+                
+                Text("Time: \(report.reportTime.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+          
+            }
+            Spacer()
+            //            Button("Delete") {
+            ////                firestoreManager.deleteReport(report: report)
+            //            }
+        }
+        .onAppear {
+            firestoreManager.getCategoryName(fromCategoryID: report.categoryID) { name in
+                DispatchQueue.main.async {
+                    self.categoryName = name
                 }
             }
             
-            VStack{
-                Spacer()
-                HStack{
-                    Spacer()
-                    Button(action: {
-                        showingAddReport = true
-                    }, label: {
-                        Image(systemName: "plus")
-                            .frame(width: 70, height: 70)
-                            .foregroundColor(.white)
-                            .background(Color(red: 219/255, green: 40/255, blue: 78/255))
-                            .clipShape(Circle())
-                    })
-                    .padding()
-                    .shadow(radius: 2)
+            firestoreManager.getCurrentVolunteerName(fromVolunteerID: report.volunteerID) { name in
+                DispatchQueue.main.async {
+                    self.volunteerName = name
+                }
+            }
+            
+            firestoreManager.getLocationName(fromLocationID: report.locationID) { name in
+                DispatchQueue.main.async {
+                    self.locationDetails = name
+                }
+            }
+            firestoreManager.getCurrentUser()
+            firestoreManager.showAllCategory()
+            firestoreManager.showAllLocation()
+        }
+    }
+}
+
+struct AddReportView: View {
+    @Environment(\.presentationMode) var presentationMode
+    @ObservedObject var firestoreManager: FirestoreManager
+    
+    @State private var categoryID = ""
+    @State private var description = ""
+    @State private var locationID = ""
+//    @State private var volunteerID = ""
+    @State private var reportTime = Date()
+    @State private var selectedImage: UIImage?
+    @State private var isShowingImagePicker = false
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Report Details")) {
+                    Button {
+                        //show image picker
+                        isShowingImagePicker = true
+                    } label: {
+                        if selectedImage == nil {
+                            Image("placeholder_img")
+                                .padding(60)
+                        } else {
+                            Image(uiImage: selectedImage!)
+                                .resizable()
+                                .frame(width: 200, height: 200)
+                                .padding(60)
+                        }
+                    }
+                    .sheet (isPresented: $isShowingImagePicker, onDismiss: nil) {
+                        //image picker
+                        ImagePicker(selectedImage: $selectedImage, isShowingImagePicker: $isShowingImagePicker)
+                    }
+                    Picker("Select Category", selection: $categoryID) {
+                        ForEach(firestoreManager.categories) { category in
+                            Text(category.name).tag(category.id)
+                        }
+                    }
+                    Picker("Select Location", selection: $locationID) {
+                        ForEach(firestoreManager.booths) { location in
+                            Text(location.name).tag(location.id)
+                        }
+                    }
+                    Section {
+                        HStack {
+                            Text("Volunteer")
+                            Spacer()
+                            Text(firestoreManager.currentUser?.name ?? "Loading...")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    TextField("Description", text: $description)
+
+                    DatePicker("Report Time", selection: $reportTime, displayedComponents: [.date, .hourAndMinute])
                 }
                 
+                Button("Save") {
+                    guard let volunteer = firestoreManager.currentUser else {
+                        print("❌ Volunteer not loaded")
+                        return
+                    }
+                    firestoreManager.addReport(
+                        categoryID: categoryID,
+                        description: description,
+                        locationID: locationID,
+                        reportTime: reportTime,
+                        volunteerID: volunteer.id
+                        
+                    )
+                    presentationMode.wrappedValue.dismiss()
+                }
             }
             
         }
