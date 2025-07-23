@@ -25,7 +25,6 @@ struct DailyReportApp: App {
     
     var body: some Scene {
         WindowGroup {
-            FirestoreView()
-        }
+            SimpleLoginView()        }
     }
 }

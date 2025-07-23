@@ -14,4 +14,5 @@ struct Report: Identifiable, Codable {
     var locationID: String
     var reportTime: Date
     var volunteerID: String
+//    var imageURL: String?
 }
