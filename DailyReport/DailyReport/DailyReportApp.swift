@@ -35,7 +35,7 @@ struct DailyReportApp: App {
                     }.transition(.opacity)
                 } else if authManager.isLoggedIn {
                     if authManager.isAdmin {
-                        DashboardView()  // Admin view
+                        FirestoreView()  // Admin view
                            
                     } else {
                         FirestoreView()  // Volunteer view

@@ -73,13 +73,25 @@ struct ReportRowView: View {
                 
                 Text("Volunteer: \(volunteerName)")
                     .font(.subheadline)
-//                    .foregroundColor(.gray)
+                //                    .foregroundColor(.gray)
                 
                 Text("Time: \(report.reportTime.formatted(date: .abbreviated, time: .shortened))")
                     .font(.caption)
                     .foregroundColor(.gray)
                 
-          
+                if let imageURL = report.imageURL, let url = URL(string: imageURL) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .frame(width: 100, height: 100)
+                            .cornerRadius(8)
+                    } placeholder: {
+                        ProgressView()
+                    }
+                }
+
+                
+                
             }
             Spacer()
             //            Button("Delete") {
@@ -118,7 +130,7 @@ struct AddReportView: View {
     @State private var categoryID = ""
     @State private var description = ""
     @State private var locationID = ""
-//    @State private var volunteerID = ""
+    //    @State private var volunteerID = ""
     @State private var reportTime = Date()
     @State private var selectedImage: UIImage?
     @State private var isShowingImagePicker = false
@@ -164,7 +176,7 @@ struct AddReportView: View {
                         }
                     }
                     TextField("Description", text: $description)
-
+                    
                     DatePicker("Report Time", selection: $reportTime, displayedComponents: [.date, .hourAndMinute])
                 }
                 
@@ -173,21 +185,48 @@ struct AddReportView: View {
                         print("❌ Volunteer not loaded")
                         return
                     }
-                    firestoreManager.addReport(
-                        categoryID: categoryID,
-                        description: description,
-                        locationID: locationID,
-                        reportTime: reportTime,
-                        volunteerID: volunteer.id
-                        
-                    )
-                    presentationMode.wrappedValue.dismiss()
+                    
+                    if let image = selectedImage {
+                        let fileName = "reports/\(UUID().uuidString).jpg"
+                        SupabaseManager.shared.uploadImage(image, fileName: fileName) { result in
+                            switch result {
+                            case .success(let imageURL):
+                                DispatchQueue.main.async {
+                                    saveReport(with: imageURL)
+                                }
+                            case .failure(let error):
+                                print("❌ Failed to upload image: \(error.localizedDescription)")
+                                DispatchQueue.main.async {
+                                    saveReport(with: nil)
+                                }
+                            }
+                        }
+                    } else {
+                        saveReport(with: nil)
+
+                    }
+                    
+                    func saveReport(with imageURL: String?) {
+                        guard let volunteer = firestoreManager.currentUser else {
+                            print("❌ Volunteer not loaded")
+                            return
+                        }
+                        firestoreManager.addReport(
+                            categoryID: categoryID,
+                            description: description,
+                            locationID: locationID,
+                            reportTime: reportTime,
+                            volunteerID: volunteer.id,
+                            imageURL: imageURL
+                        )
+                        presentationMode.wrappedValue.dismiss()
+                    }
                 }
+                .navigationTitle("Add Report")
+                .navigationBarItems(trailing: Button("Cancel") {
+                    presentationMode.wrappedValue.dismiss()
+                })
             }
-            .navigationTitle("Add Report")
-            .navigationBarItems(trailing: Button("Cancel") {
-                presentationMode.wrappedValue.dismiss()
-            })
         }
     }
 }
