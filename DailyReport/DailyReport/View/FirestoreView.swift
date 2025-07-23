@@ -6,11 +6,12 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct FirestoreView: View {
     @StateObject private var firestoreManager = FirestoreManager()
     @State private var showingAddReport = false
-    
+    @EnvironmentObject var authManager: AuthManager
     var body: some View {
         VStack {
             NavigationView {
@@ -67,6 +68,9 @@ struct FirestoreView: View {
                 .sheet(isPresented: $showingAddReport) {
                     AddReportView(firestoreManager: firestoreManager)
                 }
+                .navigationBarItems(leading:  Button("Sign Out") {
+                    try? Auth.auth().signOut()
+                })
             }
         }
     }
