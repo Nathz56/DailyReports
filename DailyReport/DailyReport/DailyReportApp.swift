@@ -50,5 +50,6 @@ struct DailyReportApp: App {
             .animation(.easeInOut(duration: 1), value: authManager.isLoggedIn)
             .environmentObject(authManager)
         }
+            SimpleLoginView()        }
     }
 }
