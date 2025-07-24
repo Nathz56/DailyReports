@@ -290,6 +290,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1592FC802E2DE61600778BA3 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				DB1179552E314843004D0C3C /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 15EA3F5C2E2DDD5C00527F29 /* Products */;
@@ -662,6 +663,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 12.0.0;
+			};
+		};
+		DB1179552E314843004D0C3C /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
