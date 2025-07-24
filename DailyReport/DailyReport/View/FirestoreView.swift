@@ -37,6 +37,9 @@ struct FirestoreView: View {
                 })
                 .onAppear {
                     firestoreManager.getReport()
+                    firestoreManager.getCurrentUser()
+                    firestoreManager.showAllCategory()
+                    firestoreManager.showAllLocation()
                 }
                 .sheet(isPresented: $showingAddReport) {
                     AddReportView(firestoreManager: firestoreManager)
@@ -94,9 +97,9 @@ struct ReportRowView: View {
                 
             }
             Spacer()
-            //            Button("Delete") {
-            ////                firestoreManager.deleteReport(report: report)
-            //            }
+//                        Button("Delete") {
+//                            firestoreManager.deleteReport(report: report)
+//                        }
         }
         .onAppear {
             firestoreManager.getCategoryName(fromCategoryID: report.categoryID) { name in
@@ -116,9 +119,6 @@ struct ReportRowView: View {
                     self.locationDetails = name
                 }
             }
-            firestoreManager.getCurrentUser()
-            firestoreManager.showAllCategory()
-            firestoreManager.showAllLocation()
         }
     }
 }
@@ -181,10 +181,10 @@ struct AddReportView: View {
                 }
                 
                 Button("Save") {
-                    guard let volunteer = firestoreManager.currentUser else {
-                        print("❌ Volunteer not loaded")
-                        return
-                    }
+//                    guard let volunteer = firestoreManager.currentUser else {
+//                        print("❌ Volunteer not loaded")
+//                        return
+//                    }
                     
                     if let image = selectedImage {
                         let fileName = "reports/\(UUID().uuidString).jpg"
