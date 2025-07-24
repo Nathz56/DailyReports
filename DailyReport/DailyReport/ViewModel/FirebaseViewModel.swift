@@ -39,9 +39,9 @@ class FirestoreManager: ObservableObject {
 
     
     //create report
-    func addReport(categoryID: String, description: String, locationID: String, reportTime: Date, volunteerID: String) {
+    func addReport(categoryID: String, description: String, locationID: String, reportTime: Date, volunteerID: String, imageURL: String?) {
         
-        let newReport = Report(categoryID: categoryID, description: description, locationID: locationID, reportTime: reportTime, volunteerID: volunteerID)
+        let newReport = Report(categoryID: categoryID, description: description, locationID: locationID, reportTime: reportTime, volunteerID: volunteerID, imageURL: imageURL)
         
         do {
             _ = try db.collection("Reports").addDocument(from: newReport)
