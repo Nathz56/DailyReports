@@ -219,6 +219,10 @@ struct AddReportView: View {
                             volunteerID: volunteer.id,
                             imageURL: imageURL
                         )
+
+                        
+                        firestoreManager.getReport()
+
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
