@@ -9,229 +9,140 @@ import SwiftUI
 import FirebaseAuth
 import UIKit
 
+
 struct FirestoreView: View {
-    
     @StateObject private var firestoreManager = FirestoreManager()
-    @State private var showingAddReport = false
     @EnvironmentObject var authManager: AuthManager
+    @State private var isNavigatingToAddReport = false
+    @State private var selectedLocationFilter: String? = nil
+    
     var body: some View {
-        VStack {
-            NavigationView {
-                List {
-                    ForEach(firestoreManager.reports) { report in
-                        ReportRowView(report: report, firestoreManager: firestoreManager)
-                            .swipeActions {
-                                Button("Edit") {
-                                    // implement your editing logic
-                                    showingAddReport = true
+        NavigationStack {
+            ZStack {
+                // Main content with buttons and reports
+                ScrollView {
+                    VStack {
+                        // Horizontal scroll view for hall filter buttons
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                // "All" button to show all reports
+                                Button(action: {
+                                    selectedLocationFilter = nil
+                                }) {
+                                    Text("All")
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(selectedLocationFilter == nil ? Color(red: 219/255, green: 40/255, blue: 78/255) : Color(.systemGray5))
+                                        .foregroundColor(.white)
+                                        .cornerRadius(10)
                                 }
-                                .tint(.blue)
+                                .layoutPriority(1)
+                                // Buttons for Hall A, Hall B, Hall C
+                                ForEach(["A", "B", "C"], id: \.self) { hall in
+                                    Button(action: {
+                                        selectedLocationFilter = hall
+                                    }) {
+                                        Text("Hall \(hall)")
+                                            .foregroundColor(selectedLocationFilter == hall ? .white : .white)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 10)
+                                                    .fill(selectedLocationFilter == hall ? Color(red: 219/255, green: 40/255, blue: 78/255) : Color(.systemGray5))
+                                            )
+//                                            .padding(.horizontal, 12)
+//                                            .padding(.vertical, 8)
+//                                            .background(selectedLocationFilter == nil ? Color(red: 219/255, green: 40/255, blue: 78/255) : Color(.systemGray5))
+//                                            .foregroundColor(.white)
+//                                            .cornerRadius(10)
+                                    }
+                                    .layoutPriority(1)
+                                }
                             }
+                            .padding(.horizontal)
+                            .padding(.top)
+                        }
+                        
+                        // Report cards
+                        LazyVStack {
+                            ForEach(filteredReports) { report in
+                                NavigationLink(destination: ReportDetailView(report: report, firestoreManager: firestoreManager)) {
+                                        ReportCardView(report: report, firestoreManager: firestoreManager)
+                                    
+                                            .frame(width: 357, height: 173)
+                                            .cornerRadius(10)
+                                            .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 4)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        .padding()
                     }
                 }
-                .navigationTitle("Reports")
-                .navigationBarItems(trailing: Button(action: {
-                    showingAddReport = true
-                }) {
-                    Image(systemName: "plus")
-                })
+                .navigationTitle("Report List")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Sign Out") {
+                            try? Auth.auth().signOut()
+                        }
+                    }
+                }
                 .onAppear {
                     firestoreManager.getReport()
+                    firestoreManager.showAllLocation()
                 }
-                .sheet(isPresented: $showingAddReport) {
-                    AddReportView(firestoreManager: firestoreManager)
-                }
-                .navigationBarItems(leading:  Button("Sign Out") {
-                    try? Auth.auth().signOut()
-                })
-            }
-        }
-    }
-}
-
-struct ReportRowView: View {
-    let report: Report
-    let firestoreManager: FirestoreManager
-    
-    @State private var categoryName: String = "Loading..."
-    @State private var volunteerName: String = "Loading..."
-    @State private var locationDetails: String = "Loading..."
-    
-    
-    var body: some View {
-        HStack {
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Description: \(report.description)")
-                    .font(.subheadline)
                 
-                Text("Category: \(categoryName)")
-                    .font(.subheadline)
-                
-                Text("Location: \(locationDetails)")
-                    .font(.subheadline)
-                
-                Text("Volunteer: \(volunteerName)")
-                    .font(.subheadline)
-                //                    .foregroundColor(.gray)
-                
-                Text("Time: \(report.reportTime.formatted(date: .abbreviated, time: .shortened))")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                
-                if let imageURL = report.imageURL, let url = URL(string: imageURL) {
-                    AsyncImage(url: url) { image in
-                        image
-                            .resizable()
-                            .frame(width: 100, height: 100)
-                            .cornerRadius(8)
-                    } placeholder: {
-                        ProgressView()
-                    }
-                }
-
-                
-                
-            }
-            Spacer()
-            //            Button("Delete") {
-            ////                firestoreManager.deleteReport(report: report)
-            //            }
-        }
-        .onAppear {
-            firestoreManager.getCategoryName(fromCategoryID: report.categoryID) { name in
-                DispatchQueue.main.async {
-                    self.categoryName = name
-                }
-            }
-            
-            firestoreManager.getCurrentVolunteerName(fromVolunteerID: report.volunteerID) { name in
-                DispatchQueue.main.async {
-                    self.volunteerName = name
-                }
-            }
-            
-            firestoreManager.getLocationName(fromLocationID: report.locationID) { name in
-                DispatchQueue.main.async {
-                    self.locationDetails = name
-                }
-            }
-            firestoreManager.getCurrentUser()
-            firestoreManager.showAllCategory()
-            firestoreManager.showAllLocation()
-        }
-    }
-}
-
-struct AddReportView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @ObservedObject var firestoreManager: FirestoreManager
-    
-    @State private var categoryID = ""
-    @State private var description = ""
-    @State private var locationID = ""
-    //    @State private var volunteerID = ""
-    @State private var reportTime = Date()
-    @State private var selectedImage: UIImage?
-    @State private var isShowingImagePicker = false
-    
-    var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Report Details")) {
-                    Button {
-                        //show image picker
-                        isShowingImagePicker = true
-                    } label: {
-                        if selectedImage == nil {
-                            Image("placeholder_img")
-                                .padding(60)
-                        } else {
-                            Image(uiImage: selectedImage!)
+                // Floating button
+                VStack {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        
+                        NavigationLink(destination: AddReportView(firestoreManager: firestoreManager), isActive: $isNavigatingToAddReport) {
+                            EmptyView()
+                        }
+                        
+                        Button(action: {
+                            isNavigatingToAddReport = true
+                        }, label: {
+                            Image(systemName: "plus")
                                 .resizable()
-                                .frame(width: 200, height: 200)
-                                .padding(60)
-                        }
-                    }
-                    .sheet (isPresented: $isShowingImagePicker, onDismiss: nil) {
-                        //image picker
-                        ImagePicker(selectedImage: $selectedImage, isShowingImagePicker: $isShowingImagePicker)
-                    }
-                    Picker("Select Category", selection: $categoryID) {
-                        ForEach(firestoreManager.categories) { category in
-                            Text(category.name).tag(category.id)
-                        }
-                    }
-                    Picker("Select Location", selection: $locationID) {
-                        ForEach(firestoreManager.booths) { location in
-                            Text(location.name).tag(location.id)
-                        }
-                    }
-                    Section {
-                        HStack {
-                            Text("Volunteer")
-                            Spacer()
-                            Text(firestoreManager.currentUser?.name ?? "Loading...")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    TextField("Description", text: $description)
-                    
-                    DatePicker("Report Time", selection: $reportTime, displayedComponents: [.date, .hourAndMinute])
-                }
-                
-                Button("Save") {
-                    guard let volunteer = firestoreManager.currentUser else {
-                        print("❌ Volunteer not loaded")
-                        return
-                    }
-                    
-                    if let image = selectedImage {
-                        let fileName = "reports/\(UUID().uuidString).jpg"
-                        SupabaseManager.shared.uploadImage(image, fileName: fileName) { result in
-                            switch result {
-                            case .success(let imageURL):
-                                DispatchQueue.main.async {
-                                    saveReport(with: imageURL)
-                                }
-                            case .failure(let error):
-                                print("❌ Failed to upload image: \(error.localizedDescription)")
-                                DispatchQueue.main.async {
-                                    saveReport(with: nil)
-                                }
-                            }
-                        }
-                    } else {
-                        saveReport(with: nil)
-
-                    }
-                    
-                    func saveReport(with imageURL: String?) {
-                        guard let volunteer = firestoreManager.currentUser else {
-                            print("❌ Volunteer not loaded")
-                            return
-                        }
-                        firestoreManager.addReport(
-                            categoryID: categoryID,
-                            description: description,
-                            locationID: locationID,
-                            reportTime: reportTime,
-                            volunteerID: volunteer.id,
-                            imageURL: imageURL
-                        )
-                        presentationMode.wrappedValue.dismiss()
+                                .scaledToFit()
+                                .frame(width: 28, height: 28)
+                                .padding()
+                                .background(Color(red: 219/255, green: 40/255, blue: 78/255))
+                                .foregroundColor(.white)
+                                .clipShape(Circle())
+                                .shadow(radius: 2)
+                        })
+                        .padding()
                     }
                 }
-                .navigationTitle("Add Report")
-                .navigationBarItems(trailing: Button("Cancel") {
-                    presentationMode.wrappedValue.dismiss()
-                })
             }
-            
         }
-        
+    }
+    
+    var filteredReports: [Report] {
+        if let selectedHall = selectedLocationFilter {
+            // Get booth IDs for the selected hall
+            let boothIDs = firestoreManager.booths
+                .filter { $0.hall == selectedHall }
+                .map { $0.id }
+            
+            // Filter reports where locationID matches booth IDs
+            return firestoreManager.reports
+                .filter { boothIDs.contains($0.locationID) }
+                .sorted(by: { $0.reportTime > $1.reportTime })
+        } else {
+            // Return all reports if no hall is selected
+            return firestoreManager.reports
+                .sorted(by: { $0.reportTime > $1.reportTime })
+        }
     }
 }
+
+
 
 
 

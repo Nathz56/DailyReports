@@ -13,11 +13,12 @@ struct ImagePicker: UIViewControllerRepresentable {
 
     @Binding var selectedImage: UIImage?
     @Binding var isShowingImagePicker: Bool
+    var sourceType: UIImagePickerController.SourceType = .photoLibrary
     
     func makeUIViewController(context: Context) -> some UIViewController {
         
         let imagePicker = UIImagePickerController()
-        imagePicker.sourceType = .photoLibrary
+        imagePicker.sourceType = sourceType
         imagePicker.delegate = context.coordinator //object yg bisa receive image uiimagepickercontroller event
         return imagePicker
     }

@@ -76,16 +76,7 @@ class FirestoreManager: ObservableObject {
     }
     
     
-//    // Delete reports
-//    func deleteReport(report: Report) {
-//        guard let reportID = report.id else { return }
-//        
-//        db.collection("Reports").document(reportID).delete { error in
-//            if let error = error {
-//                print("Error deleting reports: \(error)")
-//            }
-//        }
-//    }
+
     
     //showing data section for pickers and add form
     
@@ -197,6 +188,46 @@ class FirestoreManager: ObservableObject {
                 return
             }
             let locationDetails = "Hall \(locationHall), \(locationName), \(locationTag)"
+            completion(locationDetails)
+        }
+    }
+    
+    func getHall(fromLocationID locationID: String, completion: @escaping (String) -> Void) {
+        db.collection("Booths").document(locationID).getDocument { snapshot, error in
+            if let error = error {
+                print("Error fetching category: \(error)")
+                completion("Unknown Location")
+                return
+            }
+            guard let data = snapshot?.data(),
+                  let locationHall = data["hall"] as? String else
+            {
+                print("⚠️ Location not found.")
+                completion("Unknown Location")
+                return
+            }
+            let locationDetails = "\(locationHall)"
+            completion(locationDetails)
+        }
+    }
+    
+    func getLocationForDetail(fromLocationID locationID: String, completion: @escaping (String) -> Void) {
+        db.collection("Booths").document(locationID).getDocument { snapshot, error in
+            if let error = error {
+                print("Error fetching category: \(error)")
+                completion("Unknown Location")
+                return
+            }
+            guard let data = snapshot?.data(),
+                  
+                  let locationName = data["name"] as? String,
+                  let locationTag = data["tag"] as? String else
+            {
+                print("⚠️ Location not found.")
+                completion("Unknown Location")
+                return
+            }
+            let locationDetails = "\(locationName), \(locationTag)"
             completion(locationDetails)
         }
     }

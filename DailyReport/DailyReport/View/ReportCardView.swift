@@ -21,12 +21,17 @@ struct ReportCardView: View {
                     .font(.headline)
 
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "person.circle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 80, height: 80)
-                        .foregroundColor(.gray)
-
+                    if let imageURL = report.imageURL, let url = URL(string: imageURL) {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .frame(width: 100, height: 100)
+                                .cornerRadius(8)
+                        } placeholder: {
+                            ProgressView()
+                        }
+                    }
+ 
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Category: \(categoryName)")
                             .font(.subheadline)

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Kami membutuhkan akses kamera untuk mengunggah bukti laporan.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Kami membutuhkan akses ke galeri untuk memilih gambar.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict/>
+	</array>
+	<key>NSCameraReactionEffectGesturesEnabledDefault</key>
+	<true/>
+</dict>
+</plist>
