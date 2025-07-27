@@ -10,6 +10,7 @@ import SwiftUI
 struct ReportCardView: View {
     let report: Report
     let firestoreManager: FirestoreManager
+    let reportIndex: Int
     
     @State private var categoryName: String = "Loading..."
     @State private var volunteerName: String = "Loading..."
@@ -17,7 +18,7 @@ struct ReportCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-                Text("Report No. \(report.id ?? "Unknown")")
+                Text("Report No. \(String(format: "%05d", reportIndex + 1))")
                     .font(.headline)
 
                 HStack(alignment: .top, spacing: 12) {
@@ -83,14 +84,14 @@ struct ReportCardView: View {
     }
 }
 
-#Preview {
-    ReportCardView(report: Report(
-        id: "00001",
-        categoryID: "queue",
-        description: "Crowded in Hall A",
-        locationID: "BCA",
-        reportTime: Date(),
-        volunteerID: "vol01"
-    ),
-    firestoreManager: FirestoreManager())
-}
+//#Preview {
+//    ReportCardView(report: Report(
+//        id: "00001",
+//        categoryID: "queue",
+//        description: "Crowded in Hall A",
+//        locationID: "BCA",
+//        reportTime: Date(),
+//        volunteerID: "vol01"
+//    ),
+//    firestoreManager: FirestoreManager())
+//}
